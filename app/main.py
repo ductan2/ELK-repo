@@ -13,7 +13,7 @@ try:
       'SECRET_TOKEN': 'supersecrettoken',
       # SERVER_URL must be set to "fleet-server" if running as a docker container.
       # if running as a local python script, then set the url to "LOCALHOST"
-      'SERVER_URL': 'http://fleet-server:8200',
+      'SERVER_URL': 'http://localhost:8200',
       'ENVIRONMENT': 'development'
   })
 except Exception as e:

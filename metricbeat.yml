@@ -10,13 +10,14 @@ metricbeat.modules:
   username: ${ELASTIC_USER}
   password: ${ELASTIC_PASSWORD}
   ssl:
-    enabled: true
-    certificate_authorities: ${CA_CERT}
+    enabled: false
 
 - module: logstash
   xpack.enabled: true
   period: 10s
   hosts: ${LOGSTASH_HOSTS}
+  ssl:
+    enabled: false
 
 - module: kibana
   metricsets: 
@@ -27,8 +28,7 @@ metricbeat.modules:
   password: ${ELASTIC_PASSWORD}
   xpack.enabled: true
   ssl:
-    enabled: true
-    certificate_authorities: ${CA_CERT}
+    enabled: false
 
 - module: docker
   metricsets:
@@ -43,6 +43,8 @@ metricbeat.modules:
   hosts: ["unix:///var/run/docker.sock"]
   period: 10s
   enabled: true
+  ssl:
+    enabled: false
 
 processors:
   - add_host_metadata: ~
@@ -53,6 +55,5 @@ output.elasticsearch:
   username: ${ELASTIC_USER}
   password: ${ELASTIC_PASSWORD}
   ssl:
-    enabled: true
-    certificate_authorities: ${CA_CERT}
+    enabled: false
 

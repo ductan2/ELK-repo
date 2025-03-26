@@ -22,5 +22,4 @@ output.elasticsearch:
   username: ${ELASTIC_USER}
   password: ${ELASTIC_PASSWORD}
   ssl:
-    enabled: true
-    certificate_authorities: ${CA_CERT}
+    enabled: false
