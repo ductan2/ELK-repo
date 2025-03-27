@@ -1,0 +1,107 @@
+# ============================ Server Configuration ============================
+server:
+  host: "0.0.0.0"  # Server host address
+  port: 5601  # Server port
+  name: "my-kibana"  # Custom instance name
+  basePath: ""  # Base path for reverse proxy support
+  maxPayload: 1048576  # Maximum payload size in bytes
+  publicBaseUrl: "http://localhost:5601"  # Public URL
+
+# ============================ Elasticsearch ===============================
+elasticsearch:
+  hosts: ["http://elasticsearch:9200"]  # Elasticsearch hosts
+  username: "${ELASTICSEARCH_USERNAME}"  # Username for authentication
+  password: "${ELASTICSEARCH_PASSWORD}"  # Password for authentication
+  requestTimeout: 30000  # Request timeout in milliseconds
+  ssl:
+    verificationMode: none  # SSL verification mode
+    certificateAuthorities: []  # SSL CA certificates
+
+# ============================== Kibana =================================
+kibana:
+  index: ".kibana"  # Kibana index name
+  defaultAppId: "home"  # Default application to load
+
+# ============================ Security ================================
+xpack.security:
+  encryptionKey: "${ENCRYPTION_KEY}"  # Key for encrypting sensitive data
+  enabled: true  # Enable security features
+  audit:
+    enabled: true  # Enable audit logging
+
+# ========================== Saved Objects =============================
+xpack.encryptedSavedObjects:
+  encryptionKey: "${ENCRYPTION_KEY}"  # Key for encrypting saved objects
+
+# ============================ Reporting ==============================
+xpack.reporting:
+  encryptionKey: "${ENCRYPTION_KEY}"  # Key for encrypting reports
+  capture:
+    timeouts:
+      waitForElements: 5000  # Wait time for elements in ms
+  csv:
+    maxSizeBytes: 10485760  # Maximum CSV file size
+  roles:
+    enabled: false  # Enable role-based access
+
+# ============================== APM =================================
+elastic:
+  apm:
+    active: false  # Enable/disable APM
+    serverUrl: ""  # APM Server URL
+    secretToken: ""  # APM Secret token
+    contextPropagationOnly: false  # Context propagation setting
+
+# ============================ Monitoring ============================
+monitoring:
+  ui:
+    enabled: true  # Enable monitoring UI
+  kibana:
+    collection:
+      enabled: true  # Enable Kibana monitoring
+      interval: 10s  # Collection interval
+
+# ============================ Telemetry ============================
+telemetry:
+  enabled: false  # Enable/disable telemetry
+  allowChangingOptInStatus: false  # Allow changing opt-in status
+
+# ============================ Logging ==============================
+logging:
+  appenders:
+    file:
+      type: file
+      fileName: /var/log/kibana/kibana.log
+      layout:
+        type: json
+  root:
+    appenders: [file]
+    level: info
+
+# ============================ Fleet ================================
+xpack.fleet:
+  agents:
+    enabled: true  # Enable Fleet agents
+    elasticsearch:
+      host: "http://elasticsearch:9200"  # Elasticsearch host for Fleet
+  packages:  # Fleet packages configuration
+    - name: system
+      version: latest
+    - name: elastic_agent
+      version: latest
+    - name: apm
+      version: latest
+  agentPolicies:  # Agent policies configuration
+    - name: Fleet-Server-Policy
+      id: fleet-server-policy
+      namespace: default
+      monitoring_enabled:
+        - logs
+        - metrics
+
+# ============================ Maps =================================
+map:
+  includeElasticMapsService: false  # Include Elastic Maps Service
+
+# ============================ i18n =================================
+i18n.locale: "en"  # Default locale 

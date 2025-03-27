@@ -1,0 +1,91 @@
+# ============================== Filebeat inputs ===============================
+filebeat.inputs:
+- type: filestream  # Recommended input type for log files
+  id: my-filestream-id  # Unique identifier for this input
+  enabled: true  # Enable this input
+  paths:
+    - /path/to/logs/*.log  # Paths glob to log files
+    - /another/path/*/*.log
+  encoding: utf-8  # File encoding
+  include_lines: ['ERROR', 'WARN']  # Only include lines containing these strings
+  exclude_lines: ['DEBUG']  # Exclude lines containing these strings
+  ignore_older: 24h  # Ignore files older than this
+  scan_frequency: 10s  # How often Filebeat checks for new files
+  clean_removed: true  # Clean registry entries for removed files
+  close_removed: true  # Stop harvesting when file is removed
+
+# ---------------------------- Docker input config -----------------------------
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true  # Enable Docker hints for automatic configuration
+      templates:
+        - condition:
+            contains:
+              docker.container.labels.collect_logs: "true"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+
+# ---------------------------- Processors config -----------------------------
+processors:
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"  # Docker socket path
+  - decode_json_fields:
+      fields: ["message"]  # Decode JSON from these fields
+      target: "json"  # Store decoded JSON in this field
+      overwrite_keys: true
+  - add_host_metadata: ~  # Add host metadata
+  - add_cloud_metadata: ~  # Add cloud provider metadata
+  - add_fields:  # Add custom fields
+      target: fields
+      fields:
+        environment: production
+        team: devops
+
+# ---------------------------- Kibana config -----------------------------
+setup.kibana:
+  host: "${KIBANA_HOSTS}"  # Kibana host URL
+  protocol: "http"  # Protocol - http or https
+  username: "${ELASTIC_USER}"
+  password: "${ELASTIC_PASSWORD}"
+  ssl.enabled: false
+  ssl.verification_mode: none
+
+# ---------------------------- Elasticsearch output -----------------------------
+output.elasticsearch:
+  hosts: ["${ELASTIC_HOSTS}"]  # Elasticsearch hosts
+  protocol: "http"
+  username: "${ELASTIC_USER}"
+  password: "${ELASTIC_PASSWORD}"
+  worker: 1  # Number of workers per configured host
+  bulk_max_size: 2048  # Maximum number of events to bulk in a single request
+  backoff.init: 1s  # Initial backoff time for failed requests
+  backoff.max: 60s  # Maximum backoff time for failed requests
+  ssl:
+    enabled: false
+    verification_mode: none
+
+# ---------------------------- Logging config -----------------------------
+logging.level: info  # Log level - debug, info, warning, error
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
+# ---------------------------- General config -----------------------------
+name: my-filebeat  # Custom name for this Filebeat instance
+tags: ["service-X", "web-tier"]  # Tags for this Filebeat instance
+fields:
+  env: production  # Custom fields added to all events
+fields_under_root: true  # Store custom fields at root level
+max_procs: 4  # Maximum number of CPUs to use
+
+# ------------------------ Queue/Memory config ---------------------------
+queue.mem:
+  events: 4096  # Number of events to buffer
+  flush.min_events: 512  # Minimum number of events for flushing
+  flush.timeout: 5s  # Maximum wait time for flushing 

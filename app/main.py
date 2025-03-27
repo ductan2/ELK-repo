@@ -29,7 +29,7 @@ except Exception as e:
 
 @app.get("/custom_message/{message}")
 async def custom_message(message: str):
-    apm.capture_message(f"Custom Message: {message}")
+    apm.capture_message(f"Custom Message: {message}", level="info")
     return {"message": f"Custom Message:  {message}"}
 
 

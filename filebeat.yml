@@ -3,6 +3,7 @@ filebeat.inputs:
   id: default-filestream
   paths:
     - ingest_data/*.log
+  include_lines: ['my_python_service']
 
 filebeat.autodiscover:
   providers:
