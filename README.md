@@ -1,38 +1,157 @@
-# Getting started with the Elastic Stack and Docker Compose: Part 2
-## Elastic Agent, Fleet, and Elastic APM
+# ELK Stack Setup
 
-This repo is in reference to the blog [Getting Started with the Elastic Stack and Docker Compose: Part 2](https://www.elastic.co/blog/getting-started-with-the-elastic-stack-and-docker-compose-part-2)
+This repository contains a Docker Compose setup for Elasticsearch, Logstash, Kibana (ELK) stack with APM monitoring capabilities.
 
-You can read the first blog: [Getting Started with the Elastic Stack and Docker Compose](https://www.elastic.co/blog/getting-started-with-the-elastic-stack-and-docker-compose) or visit it's [GitHub repo](https://github.com/elkninja/elastic-stack-docker-part-one)
+## Prerequisites
 
-Please feel free to ask any questions via issues [here](https://github.com/elkninja/elastic-stack-docker-part-two/issues), our [Community Slack](https://ela.st/slack), or over in our [Discuss Forums](https://discuss.elastic.co/).
+- Docker
+- Docker Compose
+- Python 3.x (for backend application)
 
-Pull Requests welcome :)
+## Environment Variables
 
- 
-## Resources:
-### Fleet/Agent
+Create a `.env` file in the root directory with the following variables:
 
-Overview: https://www.elastic.co/guide/en/fleet/current/fleet-overview.html
+```env
+STACK_VERSION=8.11.3
+CLUSTER_NAME=docker-cluster
+ES_PORT=9200
+KIBANA_PORT=5601
+FLEET_PORT=8220
+APMSERVER_PORT=8200
+ELASTIC_PASSWORD=your_elastic_password
+KIBANA_PASSWORD=your_kibana_password
+ENCRYPTION_KEY=your_encryption_key
+ELASTIC_APM_SECRET_TOKEN=your_apm_secret_token
+ES_MEM_LIMIT=1g
+KB_MEM_LIMIT=1g
+LICENSE=basic
+```
 
-Policy Creation, No UI: https://www.elastic.co/guide/en/fleet/current/create-a-policy-no-ui.html
+## Setup
 
-Adding Fleet On-Prem: https://www.elastic.co/guide/en/fleet/current/add-fleet-server-on-prem.html
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd <repository-name>
+```
 
-Agent in a Container: https://www.elastic.co/guide/en/fleet/current/elastic-agent-container.html
+2. Create the `.env` file with your configuration
 
-Air Gapped: https://www.elastic.co/guide/en/fleet/current/air-gapped.html
+3. Start the ELK stack:
+```bash
+docker-compose up -d
+```
 
-Secure Fleet: https://www.elastic.co/guide/en/fleet/current/secure-connections.html
+4. Wait for all services to start (this may take a few minutes)
 
-### APM:
+## Accessing Services
 
-APM:
-https://www.elastic.co/guide/en/apm/guide/current/upgrade-to-apm-integration.html
+- Kibana: http://localhost:5601
+- Elasticsearch: http://localhost:9200
+- Fleet Server: http://localhost:8220
+- APM Server: http://localhost:8200
 
-On Prem: https://www.elastic.co/guide/en/apm/guide/current/apm-integration-upgrade-steps.html
+## APM Configuration
 
-Fleet-Managed: https://www.elastic.co/guide/en/fleet/8.8/install-fleet-managed-elastic-agent.html
+### Backend Application Setup
 
-Queue Full Error:
-https://www.elastic.co/guide/en/apm/server/current/common-problems.html#queue-full
+1. Install the Elastic APM client:
+```bash
+pip install elasticapm
+```
+
+2. Configure APM in your Python application:
+```python
+import os
+from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
+from elasticapm import instrument
+
+# Initialize APM
+apm_config = {
+    "SERVICE_NAME": "your-service-name",
+    "SERVER_URL": "http://fleet-server:8200",  # If running in Docker
+    # or
+    # "SERVER_URL": "http://localhost:8200",  # If running outside Docker
+    "ENVIRONMENT": "development"
+}
+
+# Initialize APM client
+_APM = make_apm_client(apm_config)
+instrument()
+
+# Add middleware to your FastAPI/Starlette app
+app.add_middleware(ElasticAPM, client=_APM)
+```
+
+## Monitoring
+
+1. Log into Kibana (http://localhost:5601)
+2. Check fleet server and change settings localhost:9200 to es01:9200
+3. Navigate to Observability > APM
+4. You should see your service listed in the services list
+
+## Troubleshooting
+
+### Common Issues
+
+1. APM Connection Issues
+   - Ensure your backend can reach the APM server
+   - Check if the APM server is running: `docker-compose ps`
+   - View APM server logs: `docker-compose logs fleet-server`
+
+2. Service Not Visible in Kibana
+   - Wait a few minutes for data to be indexed
+   - Check if your service is sending data correctly
+   - Verify the service name in your APM configuration
+
+3. Authentication Issues
+   - Ensure the APM secret token matches in both backend and ELK stack
+   - Check if anonymous access is enabled in the configuration
+
+## Maintenance
+
+### Restarting Services
+
+```bash
+# Restart all services
+docker-compose restart
+
+# Restart specific service
+docker-compose restart kibana
+docker-compose restart fleet-server
+```
+
+### Viewing Logs
+
+```bash
+# View all logs
+docker-compose logs -f
+
+# View specific service logs
+docker-compose logs -f kibana
+docker-compose logs -f fleet-server
+```
+
+### Stopping the Stack
+
+```bash
+docker-compose down
+```
+
+## Security Notes
+
+- This setup uses basic security settings
+- For production, consider:
+  - Enabling SSL/TLS
+  - Using stronger passwords
+  - Implementing proper authentication
+  - Restricting network access
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a new Pull Request

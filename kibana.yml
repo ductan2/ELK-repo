@@ -1,8 +1,18 @@
 elastic:
   apm:
-    active: true
+    active: false
     serverUrl: "http://fleet-server:8200"
     secretToken: ${ELASTIC_APM_SECRET_TOKEN}
+    contextPropagationOnly: false
+
+xpack.fleet.outputs:
+  - id: elasticsearch
+    name: elasticsearch
+    type: elasticsearch
+    hosts: ["http://es01:9200", "https://es01:9200"]
+    is_default: true
+
+
 server.host: "0.0.0.0"
 telemetry.enabled: "true"
 xpack.fleet.packages:
@@ -42,3 +52,4 @@ xpack.fleet.agentPolicies:
             value: 0.0.0.0:8200
           - name: secret_token
             value: ${ELASTIC_APM_SECRET_TOKEN}
+          
